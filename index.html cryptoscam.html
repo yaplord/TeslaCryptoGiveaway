@@ -1,0 +1,865 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesla Crypto Giveaway</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #e5e7eb;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .neon-glow-cyan {
+      box-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff;
+      transition: all 0.3s ease;
+    }
+    .neon-glow-lime {
+      box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+      transition: all 0.3s ease;
+    }
+    .neon-glow-yellow {
+      box-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+      transition: all 0.3s ease;
+    }
+    .neon-glow-purple {
+      box-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+      transition: all 0.3s ease;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #ffff00, 0 0 30px #ffff00;
+    }
+    .testimonial-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px #00f7ff, 0 0 30px #00f7ff;
+    }
+    .transaction-feed div:hover {
+      background-color: #2a2a2a;
+      box-shadow: 0 0 10px #00ff00;
+    }
+    .copy-feedback {
+      display: none;
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background-color: #222;
+      color: #00ff00;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .copy-feedback.show {
+      display: block;
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    .wallet-address-container {
+      position: relative;
+      cursor: pointer;
+    }
+    .wallet-address {
+      filter: blur(4px);
+      transition: filter 0.5s ease;
+    }
+    .wallet-address:hover {
+      color: #00ff00;
+      text-decoration: underline;
+    }
+    .wallet-address.unblurred {
+      filter: none;
+    }
+    .hook-line {
+      font-size: 1rem;
+      font-style: italic;
+      color: #00ff00;
+      text-align: center;
+      margin-top: -0.5rem;
+      margin-bottom: 2rem;
+    }
+    .qr-code {
+      margin-top: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 5px;
+      padding: 5px;
+      background-color: #fff;
+      display: block;
+      cursor: pointer;
+    }
+    .qr-code:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px #00ff00;
+    }
+    .comment-section {
+      background-color: #1a1a1a;
+      padding: 20px;
+    }
+    .comment-form {
+      background-color: #2a2a2a;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00f7ff;
+      margin-bottom: 20px;
+    }
+    .comment-form textarea {
+      width: 100%;
+      background-color: #333;
+      color: #e5e7eb;
+      border: 1px solid #00f7ff;
+      border-radius: 5px;
+      padding: 10px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+    .comment-form input[type="file"] {
+      margin-bottom: 10px;
+      color: #e5e7eb;
+    }
+    .comment-form button {
+      background-color: #00ff00;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .comment-form button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ff00;
+    }
+    .comments-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .comment {
+      background-color: #2a2a2a;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 5px #00f7ff;
+      transition: all 0.3s ease;
+    }
+    .comment:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 10px #00f7ff;
+    }
+    .comment p {
+      margin: 0 0 10px 0;
+      word-wrap: break-word;
+    }
+    .comment img {
+      max-width: 100%;
+      border-radius: 5px;
+      margin-top: 10px;
+      display: block;
+    }
+    .support-section {
+      background-color: #1a1a1a;
+      padding: 20px;
+    }
+    .support-form {
+      background-color: #2a2a2a;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00f7ff;
+    }
+    .support-form textarea {
+      width: 100%;
+      background-color: #333;
+      color: #e5e7eb;
+      border: 1px solid #00f7ff;
+      border-radius: 5px;
+      padding: 10px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+    .support-form button {
+      background-color: #00ff00;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .support-form button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ff00;
+    }
+    .confirmation-message {
+      display: none;
+      background-color: #1a3c1a;
+      color: #00ff00;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px #00f7ff;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .confirmation-message.show {
+      display: block;
+      opacity: 1;
+    }
+    /* Add cursor pointer to Elon Musk image to indicate clickability */
+    .elon-image {
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .elon-image:hover {
+      transform: scale(1.05);
+    }
+    /* Styles for the modal with a space theme */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      overflow: auto;
+    }
+    .modal-content {
+      position: relative;
+      background: radial-gradient(circle at center, #0a1a2a 0%, #000 100%);
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Ccircle cx="10" cy="10" r="1" fill="white" opacity="0.5"/%3E%3Ccircle cx="90" cy="20" r="2" fill="white" opacity="0.3"/%3E%3Ccircle cx="30" cy="80" r="1" fill="white" opacity="0.4"/%3E%3Ccircle cx="70" cy="60" r="1" fill="white" opacity="0.6"/%3E%3C/svg%3E');
+      background-size: 50px 50px;
+      margin: 5% auto;
+      padding: 20px;
+      border: 2px solid #00f7ff;
+      box-shadow: 0 0 20px #00f7ff, inset 0 0 10px #00f7ff;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 10px;
+      color: #e5e7eb;
+      transform: scale(0.8);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .modal.show .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .modal-content h2 {
+      font-size: 1.75rem;
+      font-weight: bold;
+      color: #00ff00;
+      text-align: center;
+      margin-bottom: 20px;
+      text-shadow: 0 0 5px #00ff00;
+    }
+    .modal-content p {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      color: #00f7ff;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .close-btn:hover {
+      color: #00ff00;
+      transform: rotate(90deg);
+    }
+    @media (max-width: 768px) {
+      .hero-section {
+        flex-direction: column;
+        text-align: center;
+      }
+      .hero-section img {
+        margin-top: 20px;
+      }
+      .wallet-addresses div {
+        margin: 10px 0;
+      }
+      .testimonials, .transaction-feed, .investment-graph, .comment-section, .support-section {
+        padding: 20px;
+      }
+      canvas {
+        max-width: 100%;
+      }
+      .copy-feedback {
+        font-size: 12px;
+        max-width: 200px;
+      }
+      .hook-line {
+        font-size: 0.875rem;
+      }
+      .qr-code {
+        width: 120px !important;
+        height: 120px !important;
+      }
+      .comment-form, .support-form {
+        padding: 15px;
+      }
+      .comment {
+        padding: 10px;
+      }
+      .modal-content {
+        width: 90%;
+        margin: 10% auto;
+        padding: 15px;
+      }
+      .modal-content h2 {
+        font-size: 1.5rem;
+      }
+      .close-btn {
+        font-size: 24px;
+        top: 5px;
+        right: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero-section min-h-screen flex items-center justify-center px-6">
+    <div class="flex flex-col md:flex-row items-center">
+      <div class="md:w-1/2">
+        <img src="images/tesla logo.png" alt="Tesla Logo" class="w-48 mb-6">
+        <h1 class="text-5xl font-bold mb-4 text-white">Tesla Official Crypto Giveaway</h1>
+        <p class="text-lg mb-6">Join Elon Musk in our exclusive Tesla giveaway! Send crypto and get 1000% back. Hurry, limited time only!</p>
+        <div id="countdown" class="text-3xl font-bold mb-6 neon-glow-cyan p-4 rounded-lg">
+          24:00:00
+        </div>
+        <button class="btn bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg neon-glow-yellow">Participate Now</button>
+      </div>
+      <div class="md:w-1/2 mt-10 md:mt-0">
+        <!-- Add onclick event and elon-image class to make the image clickable -->
+        <img src="images/Elon musk.jpg" alt="Elon musk" class="w-48 mb-6">
+      </div>
+    </div>
+  </section>
+
+  <!-- Add Modal for "Who is Elon Musk?" Content -->
+  <div id="elonModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h2>🌟 Who is Elon Musk?</h2>
+      <p>Elon Musk is a visionary entrepreneur, engineer, and inventor who has spent his life pushing the boundaries of what’s possible. Born in Pretoria, South Africa, he moved to the United States to pursue a bold dream — not just to succeed in business, but to reshape the future of humanity.</p>
+      <p>He is the founder and driving force behind several groundbreaking companies:</p>
+      <p>Tesla, which revolutionized the electric vehicle industry,</p>
+      <p>SpaceX, which aims to make space travel affordable and eventually colonize Mars,</p>
+      <p>Neuralink, focused on merging the human brain with AI,</p>
+      <p>The Boring Company, solving traffic with underground transport systems,</p>
+      <p>and formerly PayPal, which helped transform the way the world handles online payments.</p>
+      <p>Musk is known for thinking big and taking risks most would never dare. From launching rockets into orbit to building sustainable energy solutions, his work isn’t just about technology — it’s about securing the future of life on Earth, and beyond.</p>
+      <p>Although this website is purely educational and Elon Musk is not affiliated with this giveaway, it’s inspired by his relentless pursuit of innovation and his belief that the future belongs to those who build it.</p>
+      <p>Elon Musk isn’t just a billionaire — he’s a builder of futures.</p>
+    </div>
+  </div>
+
+  <section class="py-16 px-6">
+    <h2 class="text-3xl font-bold text-center mb-10">Send Crypto to Participate</h2>
+    <p class="hook-line">Copy the address of your choice before it's too late!</p>
+    <div class="wallet-addresses flex flex-col md:flex-row justify-center gap-6">
+      <div class="bg-gray-800 p-6 rounded-lg neon-glow-cyan w-full md:w-1/4">
+        <h3 class="text-xl font-bold mb-2">BTC Address</h3>
+        <div class="wallet-address-container">
+          <p class="break-all wallet-address" onclick="copyAddress('bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw', this)" title="Click to copy">bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw</p>
+          <span class="copy-feedback">Copied!</span>
+          <canvas id="btc-qr" class="qr-code" onclick="copyAddress('bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw', this.previousElementSibling.previousElementSibling)" title="Scan or click to copy"></canvas>
+        </div>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-lg neon-glow-lime w-full md:w-1/4">
+        <h3 class="text-xl font-bold mb-2">ETH Address</h3>
+        <div class="wallet-address-container">
+          <p class="break-all wallet-address" onclick="copyAddress('0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC', this)" title="Click to copy">0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC</p>
+          <span class="copy-feedback">Copied!</span>
+          <canvas id="eth-qr" class="qr-code" onclick="copyAddress('0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC', this.previousElementSibling.previousElementSibling)" title="Scan or click to copy"></canvas>
+        </div>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-lg neon-glow-yellow w-full md:w-1/4">
+        <h3 class="text-xl font-bold mb-2">DOGE Address</h3>
+        <div class="wallet-address-container">
+          <p class="break-all wallet-address" onclick="copyAddress('bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw', this)" title="Click to copy">bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw</p>
+          <span class="copy-feedback">Copied!</span>
+          <canvas id="doge-qr" class="qr-code" onclick="copyAddress('bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw', this.previousElementSibling.previousElementSibling)" title="Scan or click to copy"></canvas>
+        </div>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-lg neon-glow-purple w-full md:w-1/4">
+        <h3 class="text-xl font-bold mb-2">USDT Address</h3>
+        <div class="wallet-address-container">
+          <p class="break-all wallet-address" onclick="copyAddress('0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC', this)" title="Click to copy">0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC</p>
+          <span class="copy-feedback">Copied!</span>
+          <canvas id="usdt-qr" class="qr-code" onclick="copyAddress('0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC', this.previousElementSibling.previousElementSibling)" title="Scan or click to copy"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="testimonials py-16 px-6 bg-gray-900">
+    <h2 class="text-3xl font-bold text-center mb-10">What People Are Saying</h2>
+    <div id="testimonials-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    </div>
+  </section>
+
+  <section class="investment-graph py-16 px-6">
+    <h2 class="text-3xl font-bold text-center mb-10">User Investment Metrics</h2>
+    <div class="max-w-4xl mx-auto bg-gray-800 p-6 rounded-lg neon-glow-cyan">
+      <canvas id="investmentChart"></canvas>
+    </div>
+  </section>
+
+  <section class="transaction-feed py-16 px-6">
+    <h2 class="text-3xl font-bold text-center mb-10">Live Transaction Feed</h2>
+    <div id="transaction-feed" class="max-w-2xl mx-auto space-y-4">
+    </div>
+  </section>
+
+  <section class="comment-section py-16 px-6">
+    <h2 class="text-3xl font-bold text-center mb-10">Share Your Experience</h2>
+    <div class="max-w-2xl mx-auto">
+      <div class="comment-form">
+        <textarea id="comment-input" rows="4" placeholder="Write your comment here..." required></textarea>
+        <input type="file" id="comment-image" accept="image/*">
+        <button type="button" onclick="submitComment()">Submit Comment</button>
+      </div>
+      <div id="comments-container" class="comments-container">
+      </div>
+    </div>
+  </section>
+
+  <section class="support-section py-16 px-6">
+    <h2 class="text-3xl font-bold text-center mb-10">Contact Customer Support</h2>
+    <div class="max-w-2xl mx-auto">
+      <div id="support-confirmation" class="confirmation-message">
+        ✅ Message sent successfully! We'll get back to you soon.
+      </div>
+      <div class="support-form">
+        <textarea id="support-message" rows="4" placeholder="Write your message to customer support..." required></textarea>
+        <button type="button" onclick="sendSupportMessage()">Send via WhatsApp</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Add functions to control the modal
+    function openModal() {
+      const modal = document.getElementById('elonModal');
+      modal.style.display = 'block';
+      setTimeout(() => {
+        modal.classList.add('show');
+      }, 10); // Small delay to ensure transition works
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('elonModal');
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300); // Match transition duration
+    }
+
+    // Close modal when clicking outside the modal content
+    window.onclick = function(event) {
+      const modal = document.getElementById('elonModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    function startCountdown() {
+      let time = 24 * 60 * 60;
+      const countdownElement = document.getElementById('countdown');
+      setInterval(() => {
+        let hours = Math.floor(time / 3600);
+        let minutes = Math.floor((time % 3600) / 60);
+        let seconds = time % 60;
+        countdownElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        time--;
+        if (time < 0) time = 24 * 60 * 60;
+      }, 1000);
+    }
+
+    const coins = ['BTC', 'ETH', 'DOGE', 'USDT'];
+    const amounts = {
+      'BTC': [0.1, 0.5, 1.0, 2.0],
+      'ETH': [0.5, 1.0, 2.0, 3.0],
+      'DOGE': [500, 1000, 2000, 5000],
+      'USDT': [100, 500, 1000, 2000]
+    };
+    let investmentData = {
+      labels: [],
+      sent: [],
+      received: []
+    };
+
+    const firstNames = ['Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Jamie', 'Chris', 'Sam', 'Robin'];
+    const lastNames = ['Smith', 'Johnson', 'Lee', 'Brown', 'Davis', 'Wilson', 'Moore', 'Taylor', 'Clark', 'Lewis'];
+
+    const testimonialTemplates = [
+      "I sent {amount} {coin} and got {returnedAmount} {coin} back! This is incredible! 🚀",
+      "Amazing giveaway! My {amount} {coin} turned into {returnedAmount} {coin} in no time! ⚡",
+      "Sent {amount} {coin} and received {returnedAmount} {coin}! Best decision ever! 🔥",
+      "I can’t believe it! {amount} {coin} became {returnedAmount} {coin}! Thanks, Tesla! 💥",
+      "This really works! Turned {amount} {coin} into {returnedAmount} {coin}! So happy! 🌟"
+    ];
+
+    function generateFakeName() {
+      const first = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const last = lastNames[Math.floor(Math.random() * lastNames.length)];
+      return `${first}${last}${Math.floor(Math.random() * 100)}`;
+    }
+
+    function generateTestimonial() {
+      const coin = coins[Math.floor(Math.random() * coins.length)];
+      const amount = amounts[coin][Math.floor(Math.random() * amounts[coin].length)];
+      const returnedAmount = amount * 10;
+      const template = testimonialTemplates[Math.floor(Math.random() * testimonialTemplates.length)];
+      const timeAgo = Math.floor(Math.random() * 5) + 1;
+      const message = template
+        .replace('{amount}', amount)
+        .replace('{coin}', coin)
+        .replace('{returnedAmount}', returnedAmount)
+        .replace('{coin}', coin);
+      return { message, timeAgo };
+    }
+
+    function updateTestimonials() {
+      const testimonialsContainer = document.getElementById('testimonials-container');
+      testimonialsContainer.innerHTML = '';
+
+      for (let i = 0; i < 3; i++) {
+        const username = generateFakeName();
+        const { message, timeAgo } = generateTestimonial();
+        const avatarUrl = `https://images.unsplash.com/photo-${1500648767791 + i * 10}-00dcc994a43e?w=40&h=40&fit=crop`;
+
+        const testimonialDiv = document.createElement('div');
+        testimonialDiv.className = 'testimonial-card bg-gray-800 p-6 rounded-lg transition-all';
+        testimonialDiv.innerHTML = `
+          <div class="flex items-center mb-4">
+            <img src="${avatarUrl}" alt="User Avatar" class="w-10 h-10 rounded-full mr-4">
+            <div>
+              <p class="font-bold">@${username}</p>
+              <p class="text-sm text-gray-400">${timeAgo}h ago</p>
+            </div>
+          </div>
+          <p>${message}</p>
+        `;
+        testimonialsContainer.appendChild(testimonialDiv);
+      }
+    }
+
+    function addFakeTransaction() {
+      const feed = document.getElementById('transaction-feed');
+      const user = generateFakeName();
+      const coin = coins[Math.floor(Math.random() * coins.length)];
+      const amount = amounts[coin][Math.floor(Math.random() * amounts[coin].length)];
+      const returnedAmount = amount * 10;
+      const transaction = document.createElement('div');
+      transaction.className = 'bg-gray-800 p-4 rounded-lg neon-glow-lime transition-all';
+      transaction.innerHTML = `<p>${user} sent ${amount} ${coin} and received ${returnedAmount} ${coin} back! 🎉</p>`;
+      feed.prepend(transaction);
+      if (feed.children.length > 5) feed.removeChild(feed.lastChild);
+
+      if (!investmentData.labels.includes(user)) {
+        investmentData.labels.push(user);
+        investmentData.sent.push(amount);
+        investmentData.received.push(returnedAmount);
+      } else {
+        const index = investmentData.labels.indexOf(user);
+        investmentData.sent[index] += amount;
+        investmentData.received[index] += returnedAmount;
+      }
+      updateInvestmentChart();
+    }
+
+    let investmentChart;
+    function updateInvestmentChart() {
+      const ctx = document.getElementById('investmentChart').getContext('2d');
+      if (investmentChart) investmentChart.destroy();
+      investmentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: investmentData.labels,
+          datasets: [
+            {
+              label: 'Sent',
+              data: investmentData.sent,
+              backgroundColor: '#00f7ff',
+              borderColor: '#00f7ff',
+              borderWidth: 1
+            },
+            {
+              label: 'Received (1000%)',
+              data: investmentData.received,
+              backgroundColor: '#00ff00',
+              borderColor: '#00ff00',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { color: '#e5e7eb' },
+              grid: { color: '#444' }
+            },
+            x: {
+              ticks: { color: '#e5e7eb' },
+              grid: { color: '#444' }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#e5e7eb' }
+            }
+          }
+        }
+      });
+    }
+
+    function copyAddress(address, element) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(address).then(() => {
+          element.classList.add('unblurred');
+          setTimeout(() => {
+            element.classList.remove('unblurred');
+          }, 3000);
+
+          const feedback = element.nextElementSibling;
+          feedback.textContent = `Copied! ${address}`;
+          feedback.classList.add('show');
+          setTimeout(() => {
+            feedback.classList.remove('show');
+          }, 2500);
+        }).catch(err => {
+          console.error('Clipboard API failed:', err);
+          fallbackCopyAddress(address, element);
+        });
+      } else {
+        console.warn('Clipboard API not available, using fallback');
+        fallbackCopyAddress(address, element);
+      }
+    }
+
+    function fallbackCopyAddress(address, element) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = address;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        const feedback = element.nextElementSibling;
+        if (successful) {
+          element.classList.add('unblurred');
+          setTimeout(() => {
+            element.classList.remove('unblurred');
+          }, 3000);
+
+          feedback.textContent = `Copied! ${address}`;
+          feedback.classList.add('show');
+          setTimeout(() => {
+            feedback.classList.remove('show');
+          }, 2500);
+        } else {
+          throw new Error('execCommand copy failed');
+        }
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+        const feedback = element.nextElementSibling;
+        element.classList.add('unblurred');
+        setTimeout(() => {
+          element.classList.remove('unblurred');
+        }, 10000);
+
+        feedback.textContent = 'Copy failed! Please use HTTPS or localhost, or select the address manually.';
+        feedback.classList.add('show');
+        setTimeout(() => {
+          feedback.classList.remove('show');
+        }, 5000);
+      }
+    }
+
+    function generateQRCodes() {
+      QRCode.toCanvas(document.getElementById('btc-qr'), 'bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw', {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#000',
+          light: '#fff'
+        }
+      }, (error) => {
+        if (error) console.error('BTC QR Code generation failed:', error);
+      });
+
+      QRCode.toCanvas(document.getElementById('eth-qr'), '0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC', {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#000',
+          light: '#fff'
+        }
+      }, (error) => {
+        if (error) console.error('ETH QR Code generation failed:', error);
+      });
+
+      QRCode.toCanvas(document.getElementById('doge-qr'), 'bc1pdsd8ydfly4m5af8x9g88l0fwn93x9w8tae2l6q9e58pxtpm6rfjsx6rejw', {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#000',
+          light: '#fff'
+        }
+      }, (error) => {
+        if (error) console.error('DOGE QR Code generation failed:', error);
+      });
+
+      QRCode.toCanvas(document.getElementById('usdt-qr'), '0xef13c8Bb70Bd15840CE8da8c1291505AFde664FC', {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#000',
+          light: '#fff'
+        }
+      }, (error) => {
+        if (error) console.error('USDT QR Code generation failed:', error);
+      });
+    }
+
+    function submitComment() {
+      const commentInput = document.getElementById('comment-input');
+      const commentImage = document.getElementById('comment-image');
+      const commentsContainer = document.getElementById('comments-container');
+
+      const commentText = commentInput.value.trim();
+      if (!commentText) {
+        alert('Please enter a comment before submitting.');
+        return;
+      }
+
+      const commentDiv = document.createElement('div');
+      commentDiv.className = 'comment';
+
+      const commentParagraph = document.createElement('p');
+      commentParagraph.textContent = commentText;
+      commentDiv.appendChild(commentParagraph);
+
+      if (commentImage.files && commentImage.files[0]) {
+        const file = commentImage.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          commentDiv.appendChild(img);
+        };
+
+        reader.onerror = function() {
+          console.error('Error reading the image file.');
+        };
+
+        reader.readAsDataURL(file);
+      }
+
+      commentsContainer.prepend(commentDiv);
+
+      commentInput.value = '';
+      commentImage.value = '';
+    }
+
+    function sendSupportMessage() {
+      const supportMessage = document.getElementById('support-message');
+      const confirmationMessage = document.getElementById('support-confirmation');
+      const message = supportMessage.value.trim();
+
+      if (!message) {
+        alert('Please enter a message before submitting.');
+        return;
+      }
+
+      const whatsappNumber = '+19292779264';
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+      window.open(whatsappUrl, '_blank');
+
+      confirmationMessage.classList.add('show');
+      setTimeout(() => {
+        confirmationMessage.classList.remove('show');
+      }, 5000);
+
+      supportMessage.value = '';
+    }
+
+    // Initialize the page
+    startCountdown();
+    addFakeTransaction();
+    setInterval(addFakeTransaction, 5000);
+    generateQRCodes();
+    updateTestimonials();
+    setInterval(updateTestimonials, 2 * 60 * 60 * 1000);
+  </script>
+</body>
+</html>
